@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from skimage import color
 from skimage.util import random_noise
 
-# --- Function Definitions ---
+# --- Function Definitions --- (Keep these as they are)
 def augment_image(image, flip_horizontal, flip_vertical, rotation_angle):
     # Random horizontal flip
     if flip_horizontal:
@@ -81,51 +81,89 @@ def apply_sobel_edge(img, strength):
     sobel_combined = np.clip(sobel_combined * strength, 0.0, 1.0)
     return sobel_combined
 
-# --- Load Images ---
-try:
-    image_if = Image.open("./asset/IFCells.jpg")
-    image_bf = Image.open("./asset/BloodSmear.png")
-except FileNotFoundError as e:
-    st.error(f"Error loading images: {e}.  Make sure images are in the same directory.")
-    st.stop()
-
 # --- Main Application ---
 st.title("Spatial Filtering App")
 
 # --- Image Selection ---
-st.header("Image Selection")
-image_type = st.radio("Select Image Type:", ("Fluorescence (IF)", "Brightfield (BF)"))
+image_type = st.radio("Select Image Type:", ("Fluorescence (IF)", "Brightfield (BF)", "Upload Image"))
 
 if image_type == "Fluorescence (IF)":
-    image = image_if
-    image_gray = image_if.convert("L")  # Keep original color for display, grayscale for processing
-else:
-    image = image_bf
-    image_gray = image_bf.convert("L")  # Keep original color for display, grayscale for processing
+    try:
+        image = Image.open("./asset/IFCells.jpg")
+        image_gray = image.convert("L")
+    except FileNotFoundError:
+        st.error("IFCells.jpg not found.")
+        image = None
+        image_gray = None
+elif image_type == "Brightfield (BF)":
+    try:
+        image = Image.open("./asset/BloodSmear.png")
+        image_gray = image.convert("L")
+    except FileNotFoundError:
+        st.error("BloodSmear.png not found.")
+        image = None
+        image_gray = None
+else:  # Upload Image
+    uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png"])
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file)
+        image_gray = image.convert("L")
+    else:
+        image = None
+        image_gray = None
+
+if image is None:
+    st.stop()
 
 # --- Noise Addition ---
 st.header("Noise Addition")
 snp_amount = st.slider("Salt & Pepper Noise Amount", 0.0, 0.1, 0.05)
 noisy_image = random_noise(np.array(image_gray), mode="s&p", amount=snp_amount)
 
-# --- Filtering ---
+# --- Filtering and Display --- (The rest of your filtering and display code goes here)
+# ... (You can copy your existing filtering and display code here)
+# Example (Median Filtering):
+col1, col2 = st.columns(2)
+with col1:
+    st.subheader("Original Image")
+    st.image(image, caption="Original", use_container_width=True)
+with col2:
+    st.subheader("Noisy Image")
+    st.image(noisy_image, caption="Noisy", use_container_width=True)
+
 st.header("Filtering")
 
 # Median Filtering
+st.subheader("Median Filtering")
 median_kernel_size = st.slider("Median Filter Kernel Size", 3, 15, 5)
 if median_kernel_size % 2 == 0:
     median_kernel_size += 1
 median_filtered_image = cv2.medianBlur(np.uint8(noisy_image), median_kernel_size)
+col3, col4 = st.columns(2)
+with col3:
+    st.subheader("Original Image")
+    st.image(image, caption="Original", use_container_width=True)
+with col4:
+    st.subheader("Median Filtered Image")
+    st.image(median_filtered_image, caption="Median Filtered", use_container_width=True)
 
 # Edge Detection
 st.subheader("Edge Detection")
 horiz_strength = st.slider("Horizontal Edge Strength", 0.0, 1.0, 0.5)
 vert_strength = st.slider("Vertical Edge Strength", 0.0, 1.0, 0.5)
 sobel_strength = st.slider("Sobel Edge Strength", 0.0, 1.0, 0.5)
-
 horiz_edge = apply_horizontal_edge(np.array(image_gray), horiz_strength)
 vert_edge = apply_vertical_edge(np.array(image_gray), vert_strength)
 sobel_edge = apply_sobel_edge(np.array(image_gray), sobel_strength)
+col5, col6 = st.columns(2)
+with col5:
+    st.subheader("Original Image")
+    st.image(image, caption="Original", use_container_width=True)
+with col6:
+    st.subheader("Edge Detection Images")
+    st.image(horiz_edge, caption="Horizontal Edges", use_container_width=True)
+    st.image(vert_edge, caption="Vertical Edges", use_container_width=True)
+    st.image(sobel_edge, caption="Sobel Edges", use_container_width=True)
 
 # Motion Blur
 st.subheader("Motion Blur")
@@ -133,27 +171,10 @@ motion_length = st.slider("Motion Blur Length", 5, 50, 20)
 motion_angle = st.slider("Motion Blur Angle", 0.0, 180.0, 45.0)
 motion_kernel = motion_blur_kernel(motion_length, motion_angle)
 motion_blurred_image = cv2.filter2D(np.array(image_gray), -1, motion_kernel)
-
-# --- Side-by-Side Comparison ---
-st.header("Side-by-Side Comparison")
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.subheader("Original")
+col7, col8 = st.columns(2)
+with col7:
+    st.subheader("Original Image")
     st.image(image, caption="Original", use_container_width=True)
-
-with col2:
-    st.subheader("Noisy")
-    st.image(noisy_image, caption="Noisy", use_container_width=True)
-
-with col3:
-    st.subheader("Filtered")
-    st.image(median_filtered_image, caption="Median Filtered", use_container_width=True)
-
-with col4:
-    st.subheader("Edge/Blur")
+with col8:
+    st.subheader("Motion Blurred Image")
     st.image(motion_blurred_image, caption="Motion Blurred", use_container_width=True)
-    st.image(horiz_edge, caption="Horizontal Edges", use_container_width=True)
-    st.image(vert_edge, caption="Vertical Edges", use_container_width=True)
-    st.image(sobel_edge, caption="Sobel Edges", use_container_width=True)
