@@ -194,6 +194,12 @@ In this section, we add salt-and-pepper noise to the images to simulate noisy co
 """)
 
 # Salt & Pepper Noise
+st.header("Adding Salt-and-Pepper Noise and Applying Denoising Filters")
+st.write("""
+In this section, we add salt-and-pepper noise to the images to simulate noisy conditions that commonly occur in real-world imaging scenarios. Salt-and-pepper noise is characterized by randomly occurring white and black pixels. After introducing the noise, we apply various denoising filters to remove the noise and recover the original image quality. The filters used in this process include median filtering and Gaussian smoothing, which are effective in reducing noise while preserving important image details.
+""")
+
+# Salt & Pepper Noise
 snp_amount_if = st.slider("Salt & Pepper Noise Amount (IF)", 0.0, 0.1, 0.05)
 snp_amount_bf = st.slider("Salt & Pepper Noise Amount (BF)", 0.0, 0.1, 0.05)
 
@@ -208,3 +214,26 @@ with col12:
 with col13:
     st.image(image_bf_gray, caption="Original BF", use_container_width=True)
     st.image(BF_snp, caption="Noisy BF", use_container_width=True)
+
+# --- Median Filtering ---
+st.subheader("Median Filtering")
+median_kernel_size_if = st.slider("Median Filter Kernel Size (IF)", 3, 15, 5)
+median_kernel_size_bf = st.slider("Median Filter Kernel Size (BF)", 3, 15, 5)
+
+# Ensure kernel size is odd
+if median_kernel_size_if % 2 == 0:
+    median_kernel_size_if += 1
+if median_kernel_size_bf % 2 == 0:
+    median_kernel_size_bf += 1
+
+IF_median = cv2.medianBlur(np.uint8(IF_snp), median_kernel_size_if)
+BF_median = cv2.medianBlur(np.uint8(BF_snp), median_kernel_size_bf)
+
+# Display median filtered images
+col14, col15 = st.columns(2)
+with col14:
+    st.image(IF_snp, caption="Noisy IF", use_container_width=True)
+    st.image(IF_median, caption="Median Filtered IF", use_container_width=True)
+with col15:
+    st.image(BF_snp, caption="Noisy BF", use_container_width=True)
+    st.image(BF_median, caption="Median Filtered BF", use_container_width=True)
