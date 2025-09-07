@@ -72,7 +72,7 @@ motion_blurred_image = ndimage.gaussian_filter(noisy_image, sigma=motion_length)
 
 # --- Display ---
 st.header("Filtering Results")
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)  # Increased to 4 columns
 with col1:
     st.subheader("Original Image")
     st.image(image_gray, caption="Original", use_container_width=True)
@@ -80,5 +80,8 @@ with col2:
     st.subheader("Median Filtered")
     st.image(median_filtered_image, caption="Median Filtered", use_container_width=True)
 with col3:
-    st.subheader("Processed Image")
+    st.subheader("Sobel Edges")
     st.image(sobel_edge, caption="Sobel Edges", use_container_width=True)
+with col4:
+    st.subheader("Motion Blur")
+    st.image(motion_blurred_image, caption="Motion Blur", use_container_width=True)
