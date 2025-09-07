@@ -82,4 +82,3 @@ with col2:
 with col3:
     st.subheader("Processed Image")
     st.image(sobel_edge, caption="Sobel Edges", use_container_width=True)
-    st.image(motion_blurred_image, caption="Motion Blur", use_container_width=True)
